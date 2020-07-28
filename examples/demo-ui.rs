@@ -28,6 +28,7 @@ struct DemoData<'a> {
     images: Vec<Image<'a>>,
 }
 
+
 struct DemoFonts<'a> {
     icons: Font<'a>,
     sans: Font<'a>,
@@ -39,6 +40,7 @@ use glutin::event_loop::{ControlFlow, EventLoop};
 use glutin::window::WindowBuilder;
 use glutin::ContextBuilder;
 use glutin::dpi::PhysicalSize;
+
 
 fn main() {
     let size = PhysicalSize::new(INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1);
@@ -58,23 +60,16 @@ fn main() {
     gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
 
 
-    use std::rc::Rc;
-    use std::cell::RefCell;
-
-
-    let context = Rc::new(RefCell::new(nanovg::ContextBuilder::new()
+    let context = nanovg::ContextBuilder::new()
         .stencil_strokes()
         .build()
-        .expect("Initialization of NanoVG failed!")
-    ));
-
+        .expect("Initialization of NanoVG failed!");
     let start_time = Instant::now();
-    // let mut running = true;
 
     let mut mx = 0.0f32;
     let mut my = 0.0f32;
 
-    let demo_data = load_demo_data(context.borrow());
+    let demo_data = load_demo_data(&context);
 
     let mut fps_graph = PerformanceGraph::new(GraphRenderStyle::Fps, "Frame Time");
     let mut cpu_graph = PerformanceGraph::new(GraphRenderStyle::Ms, "CPU Time");
@@ -119,12 +114,12 @@ fn main() {
 
                 let (width, height) = (width as f32, height as f32);
                 let scale_factor = 1.0; // gl_window.hidpi_factor()
-                context.borrow().frame((width, height), scale_factor, |frame| {
-                    // render_demo(&frame, mx, my, width as f32, height as f32, elapsed, &demo_data);
+                context.frame((width, height), scale_factor, |frame| {
+                    render_demo(&frame, mx, my, width as f32, height as f32, elapsed, &demo_data);
 
-                    // fps_graph.draw(&frame, demo_data.fonts.sans, 5.0, 5.0);
-                    // cpu_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0, 5.0);
-                    // rng_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0 + 200.0 + 5.0, 5.0);
+                    fps_graph.draw(&frame, demo_data.fonts.sans, 5.0, 5.0);
+                    cpu_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0, 5.0);
+                    rng_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0 + 200.0 + 5.0, 5.0);
                 });
 
                 fps_graph.update(delta_time);
@@ -198,7 +193,7 @@ fn main() {
     // println!("       RNG Percent: {:.2}%  ", rng_graph.average());
 }
 
-fn load_demo_data<'a>(context: &'a Context) -> DemoData<'a> {
+fn load_demo_data(context: &Context) -> DemoData {
     let demo_fonts = DemoFonts {
         icons: Font::from_file(context, "Entypo", "resources/entypo.ttf").expect("Failed to load font 'entypo.ttf'"),
 
