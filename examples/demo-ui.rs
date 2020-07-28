@@ -3,7 +3,7 @@ extern crate glutin;
 extern crate nanovg;
 extern crate rand;
 
-use glutin::GlContext;
+// use glutin::GlContext;
 use nanovg::{
     Alignment, Clip, Color, Context, Direction, Font, Frame, Gradient, Image, ImagePattern, Intersect, LineCap,
     LineJoin, PathOptions, Scissor, Solidity, StrokeOptions, TextOptions, Transform, Winding,
@@ -43,19 +43,23 @@ use glutin::dpi::PhysicalSize;
 fn main() {
     let size = PhysicalSize::new(INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1);
     let mut event_loop = EventLoop::new();
-    let window = WindowBuilder::new()
+    let window_builder = WindowBuilder::new()
         .with_title("NanoVG UI")
         .with_inner_size(size);
-    let context = ContextBuilder::new()
+    let gl_window = ContextBuilder::new()
         .with_vsync(false)
         .with_multisampling(4)
-        .with_srgb(true);
-    let gl_window = glutin::GlWindow::new(window, context, &event_loop).unwrap();
+        .with_srgb(true)
+        .build_windowed(window_builder, &event_loop)
+        .unwrap();
+    // let gl_window = glutin::GlWindow::new(window, context, &event_loop).unwrap();
+    let gl_window = unsafe { gl_window.make_current() }.unwrap();
 
-    unsafe {
-        gl_window.make_current().unwrap();
-        gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-    }
+    gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+    // unsafe {
+    //     gl_window.make_current().unwrap();
+    //     gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
+    // }
 
     let context = nanovg::ContextBuilder::new()
         .stencil_strokes()
@@ -80,7 +84,9 @@ fn main() {
 
     
     event_loop.run(move |event, _, control_flow| {
-        // println!("{:?}", event);
+        let elapsed = get_elapsed(&start_time);
+        let delta_time = elapsed - prev_time;
+        prev_time = elapsed;
         *control_flow = ControlFlow::Wait;
         match event {
             _ => {
