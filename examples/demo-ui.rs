@@ -74,7 +74,7 @@ fn main() {
     let mut mx = 0.0f32;
     let mut my = 0.0f32;
 
-    let demo_data = load_demo_data(&*context.borrow());
+    let demo_data = load_demo_data(context.borrow());
 
     let mut fps_graph = PerformanceGraph::new(GraphRenderStyle::Fps, "Frame Time");
     let mut cpu_graph = PerformanceGraph::new(GraphRenderStyle::Ms, "CPU Time");
