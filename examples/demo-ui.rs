@@ -34,16 +34,23 @@ struct DemoFonts<'a> {
     sans_bold: Font<'a>,
 }
 
+use glutin::event::{Event, WindowEvent};
+use glutin::event_loop::{ControlFlow, EventLoop};
+use glutin::window::WindowBuilder;
+use glutin::ContextBuilder;
+use glutin::dpi::PhysicalSize;
+
 fn main() {
-    let mut events_loop = glutin::EventsLoop::new();
-    let window = glutin::WindowBuilder::new()
+    let size = PhysicalSize::new(INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1);
+    let mut event_loop = EventLoop::new();
+    let window = WindowBuilder::new()
         .with_title("NanoVG UI")
-        .with_dimensions(INIT_WINDOW_SIZE.0, INIT_WINDOW_SIZE.1);
-    let context = glutin::ContextBuilder::new()
+        .with_inner_size(size);
+    let context = ContextBuilder::new()
         .with_vsync(false)
         .with_multisampling(4)
         .with_srgb(true);
-    let gl_window = glutin::GlWindow::new(window, context, &events_loop).unwrap();
+    let gl_window = glutin::GlWindow::new(window, context, &event_loop).unwrap();
 
     unsafe {
         gl_window.make_current().unwrap();
@@ -71,57 +78,69 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut prev_time = 0.0;
 
-    while running {
-        let elapsed = get_elapsed(&start_time);
-        let delta_time = elapsed - prev_time;
-        prev_time = elapsed;
+    
+    event_loop.run(move |event, _, control_flow| {
+        // println!("{:?}", event);
+        *control_flow = ControlFlow::Wait;
+        match event {
+            _ => {
 
-        events_loop.poll_events(|event| match event {
-            glutin::Event::WindowEvent { event, .. } => match event {
-                glutin::WindowEvent::Closed => running = false,
-                glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
-                glutin::WindowEvent::CursorMoved { position, .. } => {
-                    mx = position.0 as f32;
-                    my = position.1 as f32;
-                }
-                _ => {}
-            },
-            _ => {}
-        });
-
-        let (width, height) = gl_window.get_inner_size().unwrap();
-        let (width, height) = (width as i32, height as i32);
-
-        unsafe {
-            gl::Viewport(0, 0, width, height);
-            gl::ClearColor(0.3, 0.3, 0.32, 1.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+            }
         }
+    });
 
-        let (width, height) = (width as f32, height as f32);
-        context.frame((width, height), gl_window.hidpi_factor(), |frame| {
-            render_demo(&frame, mx, my, width as f32, height as f32, elapsed, &demo_data);
 
-            fps_graph.draw(&frame, demo_data.fonts.sans, 5.0, 5.0);
-            cpu_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0, 5.0);
-            rng_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0 + 200.0 + 5.0, 5.0);
-        });
+    // while running {
+    //     let elapsed = get_elapsed(&start_time);
+    //     let delta_time = elapsed - prev_time;
+    //     prev_time = elapsed;
 
-        fps_graph.update(delta_time);
+    //     events_loop.poll_events(|event| match event {
+    //         glutin::Event::WindowEvent { event, .. } => match event {
+    //             glutin::event::Event::Closed => running = false,
+    //             glutin::WindowEvent::Resized(w, h) => gl_window.resize(w, h),
+    //             glutin::WindowEvent::CursorMoved { position, .. } => {
+    //                 mx = position.0 as f32;
+    //                 my = position.1 as f32;
+    //             }
+    //             _ => {}
+    //         },
+    //         _ => {}
+    //     });
 
-        percent = if rng.gen() { percent + 1.0 } else { percent - 1.0 };
-        percent = clamp(percent, 0.0, 100.0);
-        rng_graph.update(percent);
+    //     let (width, height) = gl_window.get_inner_size().unwrap();
+    //     let (width, height) = (width as i32, height as i32);
 
-        let cpu_time = get_elapsed(&start_time) - elapsed;
-        cpu_graph.update(cpu_time);
+    //     unsafe {
+    //         gl::Viewport(0, 0, width, height);
+    //         gl::ClearColor(0.3, 0.3, 0.32, 1.0);
+    //         gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+    //     }
 
-        gl_window.swap_buffers().unwrap();
-    }
+    //     let (width, height) = (width as f32, height as f32);
+    //     context.frame((width, height), gl_window.hidpi_factor(), |frame| {
+    //         render_demo(&frame, mx, my, width as f32, height as f32, elapsed, &demo_data);
 
-    println!("Average Frame Time: {:.2} ms", fps_graph.average() * 1000.0);
-    println!("          CPU Time: {:.2} ms", cpu_graph.average() * 1000.0);
-    println!("       RNG Percent: {:.2}%  ", rng_graph.average());
+    //         fps_graph.draw(&frame, demo_data.fonts.sans, 5.0, 5.0);
+    //         cpu_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0, 5.0);
+    //         rng_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0 + 200.0 + 5.0, 5.0);
+    //     });
+
+    //     fps_graph.update(delta_time);
+
+    //     percent = if rng.gen() { percent + 1.0 } else { percent - 1.0 };
+    //     percent = clamp(percent, 0.0, 100.0);
+    //     rng_graph.update(percent);
+
+    //     let cpu_time = get_elapsed(&start_time) - elapsed;
+    //     cpu_graph.update(cpu_time);
+
+    //     gl_window.swap_buffers().unwrap();
+    // }
+
+    // println!("Average Frame Time: {:.2} ms", fps_graph.average() * 1000.0);
+    // println!("          CPU Time: {:.2} ms", cpu_graph.average() * 1000.0);
+    // println!("       RNG Percent: {:.2}%  ", rng_graph.average());
 }
 
 fn load_demo_data(context: &Context) -> DemoData {

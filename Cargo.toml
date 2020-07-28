@@ -26,7 +26,7 @@ gles3 = ["nanovg-sys/gles3"]
 nanovg-sys = { path = "nanovg-sys", version = "1.0.2" }
 
 [dev-dependencies]
-glutin = "0.13.0"
+glutin = "0.24.0"
 gl = "0.10.0"
 chrono = "0.4"
 rand = "0.4"
