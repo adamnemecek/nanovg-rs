@@ -63,7 +63,7 @@ fn main() {
         .expect("Initialization of NanoVG failed!");
 
     let start_time = Instant::now();
-    let mut running = true;
+    // let mut running = true;
 
     let mut mx = 0.0f32;
     let mut my = 0.0f32;
@@ -90,6 +90,7 @@ fn main() {
                     *control_flow = ControlFlow::Exit
                 }
                 WindowEvent::Resized(physical_size) => {
+                    // size = physical_size;
                     gl_window.resize(physical_size);
                 }
                 WindowEvent::CursorMoved { position, .. } => {
@@ -99,6 +100,37 @@ fn main() {
                 _ => {
 
                 }
+            }
+            Event::RedrawRequested(_) => {
+                // let (width, height) = gl_window.inner_size().unwrap();
+                let (width, height) = (size.width as i32, size.height as i32);
+
+                unsafe {
+                    gl::Viewport(0, 0, width, height);
+                    gl::ClearColor(0.3, 0.3, 0.32, 1.0);
+                    gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
+                }
+
+                let (width, height) = (width as f32, height as f32);
+                let scale_factor = 1.0; // gl_window.hidpi_factor()
+                context.frame((width, height), scale_factor, |frame| {
+                    render_demo(&frame, mx, my, width as f32, height as f32, elapsed, &demo_data);
+
+                    fps_graph.draw(&frame, demo_data.fonts.sans, 5.0, 5.0);
+                    cpu_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0, 5.0);
+                    rng_graph.draw(&frame, demo_data.fonts.sans, 5.0 + 200.0 + 5.0 + 200.0 + 5.0, 5.0);
+                });
+
+                fps_graph.update(delta_time);
+
+                percent = if rng.gen() { percent + 1.0 } else { percent - 1.0 };
+                percent = clamp(percent, 0.0, 100.0);
+                rng_graph.update(percent);
+
+                let cpu_time = get_elapsed(&start_time) - elapsed;
+                cpu_graph.update(cpu_time);
+
+                gl_window.swap_buffers().unwrap();
             }
             _ => {
 

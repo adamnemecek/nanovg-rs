@@ -30,7 +30,7 @@ fn build_library(backend_macro: &str) {
 }
 
 fn main() {
-    let backend_macro = ["GL3", "GL2", "GLES3", "GLES2"]
+    let backend_macro = ["GL3", "GL2", "GLES3", "GLES2", "Metal"]
         .iter()
         .filter(|f| env::var(format!("CARGO_FEATURE_{}", f)).is_ok())
         .map(|f| format!("NANOVG_{}_IMPLEMENTATION", f))
