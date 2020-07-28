@@ -52,14 +52,10 @@ fn main() {
         .with_srgb(true)
         .build_windowed(window_builder, &event_loop)
         .unwrap();
-    // let gl_window = glutin::GlWindow::new(window, context, &event_loop).unwrap();
+
     let gl_window = unsafe { gl_window.make_current() }.unwrap();
 
     gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-    // unsafe {
-    //     gl_window.make_current().unwrap();
-    //     gl::load_with(|symbol| gl_window.get_proc_address(symbol) as *const _);
-    // }
 
     let context = nanovg::ContextBuilder::new()
         .stencil_strokes()
@@ -82,13 +78,28 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut prev_time = 0.0;
 
-    
+
     event_loop.run(move |event, _, control_flow| {
         let elapsed = get_elapsed(&start_time);
         let delta_time = elapsed - prev_time;
         prev_time = elapsed;
         *control_flow = ControlFlow::Wait;
         match event {
+            Event::WindowEvent { event, .. } => match event {
+                WindowEvent::CloseRequested => {
+                    *control_flow = ControlFlow::Exit
+                }
+                WindowEvent::Resized(physical_size) => {
+                    gl_window.resize(physical_size);
+                }
+                WindowEvent::CursorMoved { position, .. } => {
+                    mx = position.x as f32;
+                    my = position.y as f32;
+                }
+                _ => {
+
+                }
+            }
             _ => {
 
             }
